@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>서울어울림체육센터 운동성향 알아보기</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            /* 푸른색과 초록색의 조화로운 배경 */
+            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* 트랜지션 유틸리티 */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+        .fade-exit { opacity: 1; }
+        .fade-exit-active { opacity: 0; transition: opacity 200ms; }
+        
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 480px; /* 모바일 최적화 폭 */
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: 20px;
+            flex-direction: column;
+        }
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:active {
+            transform: scale(0.98);
+            background-color: #f0fdf4;
+        }
+        
+        /* 커스텀 스크롤바 (모달용) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-emerald-200">
+
+    <!-- Screen 1: Home -->
+    <section id="screen-home" class="screen active justify-center items-center text-center">
+        <div class="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-white/50 w-full">
+            <div class="mb-6 flex justify-center text-emerald-600">
+                <i data-lucide="activity" class="w-16 h-16"></i>
+            </div>
+            <h2 class="text-xl text-slate-500 font-medium mb-1 tracking-tight">서울어울림체육센터</h2>
+            <h1 class="text-3xl font-bold text-slate-800 mb-6 leading-tight">
+                나의 <span class="text-emerald-600">운동 성향</span><br>알아보기
+            </h1>
+            <p class="text-slate-600 mb-8 text-sm break-keep">
+                단 1분! 나에게 딱 맞는 운동 프로그램을 추천받고<br>수강신청까지 한 번에 진행해보세요.
+            </p>
+            <button onclick="app.startBasicSurvey()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 hover:shadow-emerald-300 transition-all text-lg flex justify-center items-center gap-2">
+                테스트 시작하기 <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- Screen 2: Basic Info (Age & Type) -->
+    <section id="screen-basic" class="screen justify-center">
+        <div class="mb-8">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 w-1/6 rounded-full"></div>
+                </div>
+                <span class="text-xs font-bold text-emerald-600 whitespace-nowrap">사전 질문</span>
+            </div>
+            <h2 id="basic-question-title" class="text-2xl font-bold break-keep leading-snug">프로그램에 참여하실 분의 연령대는?</h2>
+        </div>
+
+        <div id="basic-options" class="flex flex-col gap-3">
+            <!-- JS 렌더링 -->
+        </div>
+    </section>
+
+    <!-- Screen 3: Persona Survey (Q1 ~ Q5) -->
+    <section id="screen-survey" class="screen justify-center">
+        <div class="mb-8">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
+                    <div id="survey-progress" class="h-full bg-blue-500 transition-all duration-300 rounded-full" style="width: 20%"></div>
+                </div>
+                <span id="survey-step-text" class="text-xs font-bold text-blue-600 whitespace-nowrap">1 / 5</span>
+            </div>
+            <h2 id="survey-question-title" class="text-2xl font-bold break-keep leading-snug">질문 타이틀</h2>
+        </div>
+
+        <div id="survey-options" class="flex flex-col gap-3">
+            <!-- JS 렌더링 -->
+        </div>
+    </section>
+
+    <!-- Screen 4: Loading -->
+    <section id="screen-loading" class="screen justify-center items-center text-center">
+        <i data-lucide="loader-2" class="w-12 h-12 text-emerald-500 animate-spin mb-4"></i>
+        <h2 class="text-xl font-bold text-slate-700 mb-2">성향을 분석하고 있습니다...</h2>
+        <p class="text-slate-500 text-sm">가장 적합한 프로그램을 찾고 있어요.</p>
+    </section>
+
+    <!-- Screen 5: Result -->
+    <section id="screen-result" class="screen pt-10 pb-20">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden mb-6 border border-emerald-50">
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-center text-white relative overflow-hidden">
+                <i data-lucide="sparkles" class="absolute top-2 right-2 w-16 h-16 opacity-10"></i>
+                <p class="text-emerald-100 font-medium text-sm mb-1">당신의 운동 성향은</p>
+                <h2 id="result-title" class="text-2xl font-bold break-keep">이너피스 & 코어 집중형</h2>
+            </div>
+            <div class="p-6">
+                <p id="result-desc" class="text-slate-600 text-sm leading-relaxed mb-6 break-keep">
+                    설명 텍스트...
+                </p>
+                
+                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+                    추천 프로그램
+                </h3>
+                
+                <div id="recommended-list" class="flex flex-col gap-3 mb-6">
+                    <!-- JS 렌더링 -->
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="app.showTimetable()" class="flex-1 bg-sky-50 text-sky-700 border border-sky-200 font-bold py-3 rounded-xl flex justify-center items-center gap-1 active:bg-sky-100 transition">
+                        <i data-lucide="calendar" class="w-4 h-4"></i> 시간표 보기
+                    </button>
+                    <a href="https://www.giseoul.or.kr/" target="_blank" class="flex-1 bg-emerald-500 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-1 active:bg-emerald-600 transition shadow-md shadow-emerald-200">
+                        수강신청 <i data-lucide="external-link" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="app.restart()" class="w-full text-slate-400 text-sm py-2 hover:text-slate-600 flex justify-center items-center gap-1">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> 다시 테스트하기
+        </button>
+    </section>
+
+    <!-- Timetable Modal Overlay -->
+    <div id="timetable-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex-col justify-end sm:justify-center items-center pb-0 sm:pb-10">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col h-[80vh] sm:h-[600px] transform transition-transform translate-y-full" id="timetable-content">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <h3 class="font-bold text-lg text-slate-800">센터 프로그램 시간표</h3>
+                <button onclick="app.hideTimetable()" class="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto" id="timetable-list">
+                <!-- JS 렌더링 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm transition-opacity opacity-0 pointer-events-none z-50">
+        메시지
+    </div>
+
+    <script>
+        // --- 1. Data Definitions ---
+        
+        // 카테고리 정의
+        const CATEGORIES = {
+            1: { title: "🔥 에너지 폭발! 리듬 & 텐션형", desc: "신나는 음악과 함께 땀을 흠뻑 흘리며 일상의 스트레스를 역동적으로 날려버리는 것을 즐기시는군요! 화려한 움직임으로 에너지를 발산해보세요." },
+            2: { title: "🧘‍♀️ 이너피스 & 코어 집중형", desc: "비교적 정적인 분위기에서 굳은 몸을 부드럽게 풀고, 속근육을 단련하여 밸런스와 자세를 교정하는 데 집중하는 성향입니다." },
+            3: { title: "🐬 물 만난 물고기형", desc: "관절에 무리 없이 전신 근력을 고루 키우고, 물속에서의 활동 자체에서 큰 상쾌함과 성취감을 느끼는 성향입니다." },
+            4: { title: "🎾 득점의 쾌감! 라켓 & 코트형", desc: "단순한 반복 운동보다는 공을 치고 쫓으며 점수를 내는 짜릿함을 선호하고, 구기 종목 특유의 몰입감과 승부욕을 즐깁니다." },
+            5: { title: "🎧 묵묵한 마이웨이형", desc: "정해진 강습 시간이나 진도에 얽매이지 않고, 온전히 내 페이스에 맞춰 목표 지향적으로 운동하는 것을 선호합니다." }
+        };
+
+        // 센터 프로그램 데이터
+        const PROGRAMS = [
+            // 수영 (Category 3)
+            { name: '유아 소그룹 수영', cat: 3, age: ['A'], type: ['N'], time: '월수금/화목 15:00', fee: '100,000원', target: '6~7세' },
+            { name: '어린이 수영', cat: 3, age: ['B', 'C'], type: ['N'], time: '월수/화목 16:00, 17:00', fee: '별도문의', target: '초등생' },
+            { name: '토요 어린이 소그룹', cat: 3, age: ['B', 'C'], type: ['N'], time: '토요일 13:00~16:00', fee: '별도문의', target: '초등생' },
+            { name: '아쿠아로빅', cat: 3, age: ['D', 'E', 'F'], type: ['N'], time: '월수금/화목 13:00', fee: '별도문의', target: '13세 이상' },
+            { name: '성인 수영 (새벽/오전/저녁)', cat: 3, age: ['D', 'E', 'F'], type: ['N'], time: '06:00~21:00 타임별', fee: '별도문의', target: '13세 이상' },
+            { name: '성인 여성(지체) 수영', cat: 3, age: ['E', 'F'], type: ['P'], time: '오전 08:30~10:30', fee: '별도문의', target: '성인 지체장애 여성' },
+            { name: '가족 어울림 수영', cat: 3, age: ['B'], type: ['F'], time: '오후 15:00 / 저녁 20:00', fee: '별도문의', target: '장애아동+동성보호자' },
+            { name: '발달장애 아동 수영', cat: 3, age: ['B'], type: ['D'], time: '오후 16:00, 17:00', fee: '별도문의', target: '8~10세 발달아동' },
+            { name: '자유수영', cat: 3, age: ['A', 'B', 'C', 'D', 'E', 'F'], type: ['N', 'P', 'D', 'F'], time: '평일/토요일 시간대별 운영', fee: '별도문의', target: '24개월 이상 누구나' },
+            
+            // 헬스 (Category 5)
+            { name: '자유 헬스', cat: 5, age: ['D', 'E', 'F'], type: ['N', 'P', 'D', 'F'], time: '월~토 운영시간 내 자유', fee: '월 50,000원', target: '13세 이상' },
+            
+            // 댄스/트램펄린 (Category 1)
+            { name: 'K-pop 방송댄스', cat: 1, age: ['D'], type: ['N'], time: '월수금 19:00 / 화목 20:00', fee: '40,000~60,000원', target: '청소년' },
+            { name: '어울림 K-pop', cat: 1, age: ['E', 'D'], type: ['D'], time: '오후 15:00', fee: '40,000~60,000원', target: '발달장애' },
+            { name: '줌바댄스', cat: 1, age: ['E', 'F'], type: ['N'], time: '화목 10:00, 11:00', fee: '40,000원', target: '성인/어르신' },
+            { name: '트램펄린', cat: 1, age: ['E', 'F'], type: ['N'], time: '평일 저녁 19:00, 20:00', fee: '40,000~60,000원', target: '성인' },
+
+            // 요가/필라테스/스트레칭 (Category 2)
+            { name: '요가', cat: 2, age: ['E', 'F'], type: ['N'], time: '월수금 10:00, 11:00', fee: '60,000원', target: '성인' },
+            { name: '소도구 필라테스', cat: 2, age: ['E'], type: ['N'], time: '평일 저녁 19:00, 20:00', fee: '60,000원', target: '성인' },
+            { name: '어르신 소도구 필라테스', cat: 2, age: ['F'], type: ['N'], time: '평일 오후 14:00, 15:00', fee: '40,000~60,000원', target: '어르신' },
+            { name: '어울림 스트레칭', cat: 2, age: ['E', 'F'], type: ['P', 'D'], time: '화목 10:00, 11:00', fee: '40,000원', target: '장애인' },
+
+            // 구기종목/라켓 (Category 4)
+            { name: '자유 볼링', cat: 4, age: ['D', 'E', 'F'], type: ['N', 'P', 'D', 'F'], time: '상시 (대기발생 가능)', fee: '1게임 2,100~3,900원', target: '12세 이상' },
+            { name: '탁구', cat: 4, age: ['E', 'F'], type: ['N'], time: '평일 오전 10:00, 11:00', fee: '28,000~40,000원', target: '성인' },
+            { name: '어울림 탁구', cat: 4, age: ['E', 'F'], type: ['P', 'D', 'F'], time: '월수금 10:00, 11:00', fee: '무료/60,000원', target: '장애인 무관/중증' },
+            { name: '배드민턴', cat: 4, age: ['D', 'E', 'F'], type: ['N'], time: '월수금 저녁 19:00~21:00', fee: '40,000원', target: '연령 무관' },
+            { name: '청소년 농구', cat: 4, age: ['D'], type: ['N'], time: '토요일 14:00, 15:00', fee: '30,000원', target: '청소년' },
+            { name: '성인농구클럽', cat: 4, age: ['E'], type: ['D'], time: '평일 오후 16:00~18:00', fee: '별도문의', target: '지적장애' },
+            { name: '피클볼', cat: 4, age: ['D', 'E', 'F'], type: ['N'], time: '토요일 16:00, 17:00', fee: '40,000원', target: '연령 무관' },
+            { name: '보치아', cat: 4, age: ['E', 'F'], type: ['P', 'D'], time: '평일 주간', fee: '미정', target: '장애인 성인' }
+        ];
+
+        // 사전 질문 데이터
+        const BASIC_QUESTIONS = [
+            {
+                id: 'age',
+                title: "프로그램에 주로 참여하실 분의 연령대는?",
+                options: [
+                    { val: 'A', text: "유아 (6~7세)" },
+                    { val: 'B', text: "초등 저학년 (8~10세)" },
+                    { val: 'C', text: "초등 고학년 (11~13세)" },
+                    { val: 'D', text: "청소년 (14~19세)" },
+                    { val: 'E', text: "성인 (20~50대)" },
+                    { val: 'F', text: "어르신 (60대 이상)" }
+                ]
+            },
+            {
+                id: 'type',
+                title: "참여 대상자의 유형을 선택해 주세요.",
+                options: [
+                    { val: 'N', text: "일반 (비장애인)" },
+                    { val: 'P', text: "지체 장애" },
+                    { val: 'D', text: "발달 / 지적 장애" },
+                    { val: 'F', text: "장애인과 동반하는 보호자 (가족)" }
+                ]
+            }
+        ];
+
+        // 메인 성향 설문 데이터
+        const SURVEY_QUESTIONS = [
+            {
+                title: "운동을 시작하려는 가장 큰 목적은 무엇인가요?",
+                options: [
+                    { text: "스트레스 폭발! 음악에 맞춰 몸을 흔들며 억눌린 에너지를 발산하고 싶다.", scores: {1:3} },
+                    { text: "자세 교정! 틀어진 체형을 바로잡고 뻣뻣하게 굳은 몸을 부드럽게 풀고 싶다.", scores: {2:3} },
+                    { text: "기초 체력! 헉헉대는 체력을 극복하고 전반적인 심폐지구력과 근력을 키우고 싶다.", scores: {3:3, 5:2} },
+                    { text: "기술 습득과 승부! 새로운 규칙을 배우고 점수를 내는 짜릿한 성취감을 원한다.", scores: {4:3} }
+                ]
+            },
+            {
+                title: "가장 선호하는 운동 환경이나 분위기는 어떤가요?",
+                options: [
+                    { text: "화려한 조명이나 빵빵한 비트의 음악이 흘러나오는 활기찬 스튜디오", scores: {1:3} },
+                    { text: "은은한 조명 아래서 차분하게 내 호흡과 감각에만 집중할 수 있는 조용한 공간", scores: {2:3, 5:1} },
+                    { text: "땀 흘릴 걱정이나 관절 무리 없이 상쾌하게 움직일 수 있는 수영장", scores: {3:4} },
+                    { text: "명확한 규칙, 라인, 그리고 점수판이 세팅되어 있는 생동감 넘치는 실내 경기장", scores: {4:3} }
+                ]
+            },
+            {
+                title: "운동할 때 사람들과의 상호작용은 어느 정도가 좋으신가요?",
+                options: [
+                    { text: "다 같이 으쌰으쌰! 강사님 텐션에 맞춰 여럿이 단체로 에너지를 뿜어내는 방식", scores: {1:3, 3:1} },
+                    { text: "디테일한 피드백! 동작 하나하나 선생님의 세심한 터치와 지도를 받는 방식", scores: {2:3} },
+                    { text: "선의의 경쟁! 상대방과 랠리를 주고받거나 팀을 이루어 승패를 가르는 방식", scores: {4:3} },
+                    { text: "완벽한 마이웨이! 누구와도 엮이지 않고 내 루틴을 소화하는 독립적인 방식", scores: {5:4, 3:2} }
+                ]
+            },
+            {
+                title: "가장 끌리는 '움직임의 방식'은 무엇인가요?",
+                options: [
+                    { text: "리듬에 맞춰 스텝을 밟거나 제자리에서 방방 뛰는 다이나믹한 움직임", scores: {1:3} },
+                    { text: "특정 자세를 길게 유지하며 속근육의 미세한 떨림을 느끼는 정적인 움직임", scores: {2:3} },
+                    { text: "물의 저항을 가르며 나아가거나, 무거운 기구를 밀어내는 묵직한 움직임", scores: {3:3, 5:3} },
+                    { text: "공의 궤적을 쫓아 순발력 있게 몸의 방향을 휙휙 전환하는 민첩한 움직임", scores: {4:3} }
+                ]
+            },
+            {
+                title: "운동이 끝난 후, 언제 가장 큰 보람을 느낄 것 같나요?",
+                options: [
+                    { text: "숨이 턱 끝까지 차오르고 온몸이 땀에 흠뻑 젖었을 때", scores: {1:3} },
+                    { text: "운동 전보다 확연히 자세가 곧아지고 통증이 줄어든 것을 느낄 때", scores: {2:3} },
+                    { text: "목표했던 거리나 바퀴 수, 기구 세트 수를 포기하지 않고 끝까지 완주했을 때", scores: {3:3, 5:3} },
+                    { text: "완벽한 타이밍에 타격을 성공시켜 득점하거나 랠리를 이겨냈을 때", scores: {4:3} }
+                ]
+            }
+        ];
+
+        // --- 2. Application State & Logic ---
+
+        const app = {
+            state: {
+                userData: { age: null, type: null },
+                scores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                currentBasicStep: 0,
+                currentSurveyStep: 0,
+                finalCategory: null,
+                filteredPrograms: []
+            },
+
+            init() {
+                lucide.createIcons();
+            },
+
+            switchScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+                window.scrollTo(0,0);
+            },
+
+            // 사전 질문 시작
+            startBasicSurvey() {
+                this.state.currentBasicStep = 0;
+                this.renderBasicStep();
+                this.switchScreen('screen-basic');
+            },
+
+            renderBasicStep() {
+                const q = BASIC_QUESTIONS[this.state.currentBasicStep];
+                document.getElementById('basic-question-title').innerText = q.title;
+                
+                const optionsContainer = document.getElementById('basic-options');
+                optionsContainer.innerHTML = '';
+                
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "option-btn w-full text-left bg-white border-2 border-emerald-100 p-5 rounded-2xl shadow-sm text-slate-700 font-medium hover:border-emerald-400 focus:outline-none flex justify-between items-center";
+                    btn.innerHTML = `<span>${opt.text}</span> <i data-lucide="chevron-right" class="w-5 h-5 text-emerald-300"></i>`;
+                    btn.onclick = () => this.handleBasicSelect(q.id, opt.val);
+                    optionsContainer.appendChild(btn);
+                });
+                lucide.createIcons();
+            },
+
+            handleBasicSelect(key, val) {
+                this.state.userData[key] = val;
+                this.state.currentBasicStep++;
+                
+                if (this.state.currentBasicStep >= BASIC_QUESTIONS.length) {
+                    this.startMainSurvey();
+                } else {
+                    this.renderBasicStep();
+                }
+            },
+
+            // 메인 성향 질문 시작
+            startMainSurvey() {
+                this.state.currentSurveyStep = 0;
+                this.state.scores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }; // 리셋
+                this.renderSurveyStep();
+                this.switchScreen('screen-survey');
+            },
+
+            renderSurveyStep() {
+                const step = this.state.currentSurveyStep;
+                const q = SURVEY_QUESTIONS[step];
+                
+                // 프로그레스 바
+                const progressPct = ((step + 1) / SURVEY_QUESTIONS.length) * 100;
+                document.getElementById('survey-progress').style.width = `${progressPct}%`;
+                document.getElementById('survey-step-text').innerText = `${step + 1} / 5`;
+                
+                document.getElementById('survey-question-title').innerText = q.title;
+                
+                const optionsContainer = document.getElementById('survey-options');
+                optionsContainer.innerHTML = '';
+                
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "option-btn w-full text-left bg-white border-2 border-blue-100 p-5 rounded-2xl shadow-sm text-slate-700 hover:border-blue-400 focus:outline-none";
+                    btn.innerHTML = `<span class="block leading-snug break-keep">${opt.text}</span>`;
+                    btn.onclick = () => this.handleSurveySelect(opt.scores);
+                    optionsContainer.appendChild(btn);
+                });
+            },
+
+            handleSurveySelect(addedScores) {
+                // 점수 합산
+                for (let cat in addedScores) {
+                    this.state.scores[cat] += addedScores[cat];
+                }
+                
+                this.state.currentSurveyStep++;
+                
+                if (this.state.currentSurveyStep >= SURVEY_QUESTIONS.length) {
+                    this.calculateResult();
+                } else {
+                    this.renderSurveyStep();
+                }
+            },
+
+            calculateResult() {
+                this.switchScreen('screen-loading');
+                
+                // 최고 점수 카테고리 찾기
+                let maxScore = -1;
+                let topCat = null;
+                for (let cat in this.state.scores) {
+                    if (this.state.scores[cat] > maxScore) {
+                        maxScore = this.state.scores[cat];
+                        topCat = cat;
+                    }
+                }
+                
+                this.state.finalCategory = parseInt(topCat);
+                
+                // 필터링 적용 (해당 카테고리 & 연령 매칭 & 대상 매칭)
+                const uAge = this.state.userData.age;
+                const uType = this.state.userData.type;
+                
+                let matches = PROGRAMS.filter(p => {
+                    return p.cat === this.state.finalCategory && 
+                           p.age.includes(uAge) && 
+                           p.type.includes(uType);
+                });
+
+                this.state.filteredPrograms = matches;
+
+                // 구글 시트로 데이터 전송 (비동기 처리)
+                this.saveDataToGoogleSheets();
+
+                // 로딩 연출 후 결과 렌더링
+                setTimeout(() => {
+                    this.renderResult();
+                    this.switchScreen('screen-result');
+                }, 1500);
+            },
+
+            // 구글 시트 전송 로직
+            saveDataToGoogleSheets() {
+                // =========================================================================
+                // [필수] 구글 앱스 스크립트 배포 후 얻은 '웹 앱 URL'을 아래에 붙여넣으세요!
+                // =========================================================================
+                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEDgqdq0EKMY4j1wKoMVd23bJBxyhJNnEM7hKvDjVmAm3VNaU0qsiVcEpjH68iy8CfwQ/exec'; 
+                
+                const payload = {
+                    ageGroup: this.getAgeText(this.state.userData.age),
+                    userType: this.getTypeText(this.state.userData.type),
+                    scores: this.state.scores,
+                    resultCategory: this.state.finalCategory
+                };
+
+                // CORS 에러를 우회하고 데이터 전송만을 목적으로 하기 위해 mode: 'no-cors' 사용
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                }).then(() => {
+                    console.log("구글 시트 저장 요청 완료");
+                }).catch(err => {
+                    console.error("구글 시트 저장 실패:", err);
+                });
+            },
+
+            renderResult() {
+                const catData = CATEGORIES[this.state.finalCategory];
+                document.getElementById('result-title').innerText = catData.title;
+                document.getElementById('result-desc').innerText = catData.desc;
+                
+                const listContainer = document.getElementById('recommended-list');
+                listContainer.innerHTML = '';
+                
+                if (this.state.filteredPrograms.length > 0) {
+                    // 최대 3개까지만 요약 노출
+                    const displayList = this.state.filteredPrograms.slice(0, 3);
+                    displayList.forEach(p => {
+                        const div = document.createElement('div');
+                        div.className = "bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center";
+                        div.innerHTML = `
+                            <div>
+                                <h4 class="font-bold text-emerald-700 text-sm mb-1">${p.name}</h4>
+                                <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded mr-1">${p.target}</span>
+                            </div>
+                        `;
+                        listContainer.appendChild(div);
+                    });
+                    if (this.state.filteredPrograms.length > 3) {
+                        listContainer.innerHTML += `<p class="text-center text-xs text-slate-400 mt-1">외 ${this.state.filteredPrograms.length - 3}개 프로그램 (시간표 확인)</p>`;
+                    }
+                } else {
+                    listContainer.innerHTML = `
+                        <div class="bg-red-50 p-4 rounded-xl text-red-600 text-sm break-keep">
+                            현재 조건에 딱 맞는 맞춤형 강좌가 조회되지 않습니다. 시간표 버튼을 눌러 전체 강좌를 확인하시거나 센터에 문의해주세요.
+                        </div>
+                    `;
+                }
+            },
+
+            // 시간표 모달
+            showTimetable() {
+                const modal = document.getElementById('timetable-modal');
+                const content = document.getElementById('timetable-content');
+                const list = document.getElementById('timetable-list');
+                list.innerHTML = '';
+
+                let displayPrograms = this.state.filteredPrograms;
+                
+                // 만약 조건에 맞는 프로그램이 없다면 전체 목록 띄우기
+                if (displayPrograms.length === 0) {
+                    displayPrograms = PROGRAMS;
+                    const notice = document.createElement('div');
+                    notice.className = "mb-4 text-xs text-sky-600 bg-sky-50 p-3 rounded-lg break-keep";
+                    notice.innerText = "추천 성향과 일치하는 강좌가 없어, 센터의 전체 프로그램 시간표를 보여드립니다.";
+                    list.appendChild(notice);
+                }
+
+                if (displayPrograms.length === 0) {
+                     list.innerHTML += `<p class="text-center text-slate-500 py-10">참여 가능한 강좌가 없습니다.</p>`;
+                } else {
+                    displayPrograms.forEach(p => {
+                        const div = document.createElement('div');
+                        div.className = "mb-3 border border-slate-200 rounded-xl p-4 bg-white shadow-sm";
+                        div.innerHTML = `
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-slate-800">${p.name}</h4>
+                            </div>
+                            <div class="text-sm text-slate-600 grid gap-1">
+                                <p><i data-lucide="clock" class="w-3 h-3 inline mr-1 text-emerald-500"></i> ${p.time}</p>
+                                <p><i data-lucide="user" class="w-3 h-3 inline mr-1 text-emerald-500"></i> 대상: ${p.target}</p>
+                                <p><i data-lucide="credit-card" class="w-3 h-3 inline mr-1 text-emerald-500"></i> 수강료: ${p.fee}</p>
+                            </div>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+                
+                lucide.createIcons();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                requestAnimationFrame(() => {
+                    content.classList.remove('translate-y-full');
+                });
+            },
+
+            hideTimetable() {
+                const modal = document.getElementById('timetable-modal');
+                const content = document.getElementById('timetable-content');
+                content.classList.add('translate-y-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 300);
+            },
+
+            restart() {
+                this.state.userData = { age: null, type: null };
+                this.state.scores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+                this.switchScreen('screen-home');
+            },
+
+            // 헬퍼 함수
+            getAgeText(val) {
+                return BASIC_QUESTIONS[0].options.find(o => o.val === val)?.text || val;
+            },
+            getTypeText(val) {
+                return BASIC_QUESTIONS[1].options.find(o => o.val === val)?.text || val;
+            }
+        };
+
+        // 초기화
+        window.onload = () => {
+            app.init();
+        };
+    </script>
+</body>
+</html>
